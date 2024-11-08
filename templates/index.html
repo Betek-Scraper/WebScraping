@@ -24,6 +24,10 @@
         .alert {
             margin-top: 20px;
         }
+        #timeEstimate {
+            font-weight: bold;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -64,17 +68,19 @@
                     <input type="file" name="file" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="url1">URL del trabajo por defecto:</label>
-                    <input type="text" name="url1" class="form-control" value="https://co.computrabajo.com/trabajo-de-desarrollador" required>
+                    <label for="url1">URL de la oferta de trabajo 1:</label>
+                    <input type="url" name="url1" class="form-control" placeholder="Ingrese la primera URL" value="https://co.computrabajo.com/trabajo-de-desarrollador">
                 </div>
                 <div class="form-group">
-                    <label for="url2">Agregar URL adicional (opcional):</label>
-                    <input type="text" name="url2" class="form-control">
+                    <label for="url2">URL de la oferta de trabajo 2 de Computrabajo (opcional):</label>
+                    <input type="url" name="url2" class="form-control" placeholder="Ingrese la segunda URL (opcional)">
                 </div>
                 <div class="form-group">
-                    <label for="vacantes">Número de vacantes a buscar:</label>
-                    <input type="number" name="vacantes" class="form-control" min="1" value="10" required>
-                    <small>Nota: Aproximadamente 6 segundos por vacante.</small>
+                    <label for="vacancy_count">Número de vacantes a buscar:</label>
+                    <input type="number" name="vacancy_count" class="form-control" min="1" value="10" required oninput="updateEstimatedTime()">
+                </div>
+                <div class="form-group">
+                    <span id="timeEstimate">Tiempo estimado: 1 minuto, 40 segundos</span>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Subir</button>
             </form>
@@ -95,5 +101,24 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function updateEstimatedTime() {
+            const count = document.querySelector('input[name="vacancy_count"]').value;
+            const secondsPerJob = 10; // 10 seconds per job
+            const totalSeconds = count * secondsPerJob;
+
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            const estimateText = `Tiempo estimado: ${hours} hora(s), ${minutes} minuto(s), ${seconds} segundo(s)`;
+            document.getElementById('timeEstimate').textContent = estimateText;
+        }
+
+        // Set initial estimate on load
+        window.onload = function() {
+            updateEstimatedTime();
+        };
+    </script>
 </body>
 </html>

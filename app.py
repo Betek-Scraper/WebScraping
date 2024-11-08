@@ -19,10 +19,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Variable de estado para verificar si se han generado los archivos
 files_generated = False
 
+
 # Página principal
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 # Ruta para subir y procesar el archivo de candidatos
 @app.route('/upload', methods=['POST'])
@@ -43,6 +45,11 @@ def upload_file():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
+    # Obtener las URLs de los formularios
+    url1 = request.form.get('url1') or 'https://co.computrabajo.com/trabajo-de-desarrollador'  # Valor predeterminado
+    url2 = request.form.get('url2')
+    vacancy_count = int(request.form.get('vacancy_count'))
+
     # Verificar los campos necesarios en el archivo Excel
     try:
         df = pd.read_excel(filepath)
@@ -59,25 +66,8 @@ def upload_file():
         flash(f'Error al leer el archivo: {e}')
         return redirect(url_for('index'))
 
-    # Obtener URLs de scraping del formulario
-    urls = [
-        request.form.get('url1', 'https://co.computrabajo.com/trabajo-de-desarrollador'),  # URL por defecto
-        request.form.get('url2')  # URL adicional si se proporciona
-    ]
-    # Filtrar URLs vacías
-    urls = [url for url in urls if url]
-
-    # Obtener el número de vacantes a buscar
-    try:
-        num_vacantes = int(request.form.get('vacantes', 10))  # Valor por defecto de 10
-        estimated_time = num_vacantes * 6  # 6 segundos por vacante
-        flash(f'Tiempo estimado de espera: {estimated_time} segundos.')
-    except ValueError:
-        flash('Por favor, introduce un número válido de vacantes.')
-        return redirect(url_for('index'))
-
     # Generar el Excel de trabajos usando linkedinjob
-    linkedinjob.generar_excel(urls, num_vacantes)  # Esto pasará el número de vacantes
+    linkedinjob.generar_excel(urls=[url1, url2], vacancy_count=vacancy_count)  # Esto guardará el archivo en disco
 
     # Procesar el archivo de candidatos usando Empleo_Candidato
     Empleo_Candidato.procesar_excel(filepath)
@@ -87,6 +77,7 @@ def upload_file():
 
     flash('Archivo procesado exitosamente. Puedes descargar los archivos generados.')
     return redirect(url_for('index'))
+
 
 # Ruta para descargar el archivo de coincidencias
 @app.route('/download_coincidencias')
@@ -101,6 +92,7 @@ def download_coincidencias():
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='Mejores_Coincidencias_Ingles_Ajustado.xlsx')
 
+
 # Ruta para descargar el archivo de Computrabajo
 @app.route('/download_computrabajo')
 def download_computrabajo():
@@ -113,6 +105,7 @@ def download_computrabajo():
     computrabajo_df.to_excel(output, index=False)
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='Computrabajo_Jobs.xlsx')
+
 
 # Ruta para enviar correos a todos los candidatos
 @app.route('/send_emails', methods=['POST'])
@@ -130,6 +123,7 @@ def send_emails():
         flash(f'Error al enviar correos: {e}')
 
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run()

@@ -5,12 +5,22 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
-def generar_excel(urls, num_vacantes=10):
-    jobs = []
+def generar_excel(urls, vacancy_count):
+    # Iniciamos el navegador (Chrome en este caso)
+    driver = webdriver.Chrome()
 
+    # Asegúrate de que las URLs son válidas
+    valid_urls = []
     for url in urls:
-        # Iniciamos el navegador (Chrome en este caso)
-        driver = webdriver.Chrome()
+        if isinstance(url, str) and url.startswith('http'):
+            valid_urls.append(url)
+        else:
+            print(f"URL inválida: {url}")
+
+    if not valid_urls:
+        raise ValueError("No hay URLs válidas para procesar.")
+
+    for url in valid_urls:
         driver.get(url)
 
         # Espera explícita para que la página cargue completamente
@@ -18,9 +28,18 @@ def generar_excel(urls, num_vacantes=10):
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
         print("Página principal cargada.")
 
-        # Bucle de paginación hasta obtener el número deseado de trabajos
-        while len(jobs) < num_vacantes:
-            # Obtener todas las ofertas de trabajo en la página actual
+        # Cerrar el banner de cookies si está presente
+        try:
+            cookie_banner = wait.until(EC.presence_of_element_located((By.ID, 'cookie-banner')))
+            close_button = cookie_banner.find_element(By.CSS_SELECTOR, 'button.cc-btn')
+            close_button.click()
+            print("Banner de cookies cerrado.")
+        except Exception as e:
+            print(f"No se pudo cerrar el banner de cookies: {e}")
+
+        # Lista para almacenar los datos de cada trabajo
+        jobs = []
+        while len(jobs) < vacancy_count:
             job_offers = driver.find_elements(By.CLASS_NAME, 'box_offer')
             print(f"Encontradas {len(job_offers)} ofertas en esta página.")
 
@@ -36,26 +55,16 @@ def generar_excel(urls, num_vacantes=10):
 
                     # Esperar que cargue la descripción completa en la página de detalle
                     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_detail')))
-                    time.sleep(2)  # Pausa breve para asegurar que toda la información esté cargada
+                    time.sleep(2)
 
                     # Capturar la descripción completa
-                    try:
-                        description = driver.find_element(By.CSS_SELECTOR, 'div.fs16').text
-                    except:
-                        description = "Descripción no disponible"
-
-                    # Capturar la sección de "Requerimientos"
-                    try:
-                        requirements = driver.find_element(By.CSS_SELECTOR, 'ul.fs16.disc').text
-                        full_description = f"{description}\\n\\nRequerimientos:\\n{requirements}"
-                    except:
-                        full_description = description  # En caso de que no haya "Requerimientos"
+                    description = driver.find_element(By.CSS_SELECTOR, 'div.fs16').text
 
                     # Guardar los datos en un diccionario
                     jobs.append({
                         'Company': company,
                         'Title': job_title,
-                        'Description': full_description,
+                        'Description': description,
                         'Apply Link': job_link
                     })
 
@@ -64,24 +73,21 @@ def generar_excel(urls, num_vacantes=10):
                     # Volver a la página de listado
                     driver.back()
                     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
-                    time.sleep(1)  # Pausa para que la página recargue los elementos
+                    time.sleep(1)
 
                 except Exception as e:
                     print(f"Error al procesar oferta: {e}")
                     continue
 
-            # Intentar ir a la siguiente página si aún no tenemos el número deseado de trabajos
+            # Intentar ir a la siguiente página si aún no tenemos suficientes trabajos
             try:
-                next_button = driver.find_element(By.XPATH, '//span[@title="Siguiente"]')
-                driver.execute_script("arguments[0].click();", next_button)
+                next_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[@title="Siguiente"]')))
+                next_button.click()
                 wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
                 print("Página siguiente cargada.")
             except Exception:
                 print("No se encontró el botón 'Siguiente' o se produjo un error.")
                 break
-
-        # Cerrar el navegador al finalizar
-        driver.quit()
 
     # Convertir la lista de trabajos a un DataFrame de pandas
     final_df = pd.DataFrame(jobs)
@@ -90,3 +96,10 @@ def generar_excel(urls, num_vacantes=10):
     output_path = 'Computrabajo_Jobs.xlsx'
     final_df.to_excel(output_path, index=False)
     print(f"Datos guardados en {output_path} con éxito.")
+
+    # Cerrar el navegador al finalizar
+    driver.quit()
+
+# Ejemplo de uso
+# urls = ['https://www.computrabajo.com.co/']
+# generar_excel(urls, 10)
