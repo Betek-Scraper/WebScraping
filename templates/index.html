@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Gestión de Candidatos</title>
+    <style>
+        body {
+            background-color: #e9ecef;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #343a40;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Gestión de Candidatos</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h2>Subir Candidatos</h2>
+            <p class="text-center">Por favor, asegúrate de que tu archivo Excel contenga los siguientes campos, sin diferencias de tildes ni mayúsculas:</p>
+            <ul>
+                <li><strong>Nombre(s)</strong></li>
+                <li><strong>Apellidos</strong></li>
+                <li><strong>Perfil</strong></li>
+                <li><strong>Género</strong></li>
+                <li><strong>Ubicación</strong></li>
+                <li><strong>Nivel de Inglés</strong></li>
+                <li><strong>Teléfono de Contacto</strong></li>
+                <li><strong>Correo de Contacto</strong></li>
+                <li><strong>Skills</strong></li>
+                <li><strong>Perfil en LinkedIn</strong></li>
+                <li><strong>Perfil GitHub</strong></li>
+                <li><strong>Hoja de Vida</strong></li>
+            </ul>
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="file" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Subir</button>
+            </form>
+        </div>
+
+        <h2 class="mt-4">Descargar Archivos Generados:</h2>
+        <div class="btn-group btn-block" role="group" aria-label="Basic example">
+            <a href="/download_coincidencias" class="btn btn-success">Descargar la lista de vacantes para cada empleado</a>
+            <a href="/download_computrabajo" class="btn btn-info">Descargar la lista de vacantes completa</a>
+        </div>
+
+        <h2 class="mt-4">Enviar Correos</h2>
+        <form action="/send_emails" method="POST">
+            <button type="submit" class="btn btn-warning btn-block">Enviar Correos a Todos los Candidatos</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
