@@ -3,7 +3,6 @@ import re
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 def procesar_excel(candidato_filepath):
     # Cargar el archivo de trabajos y el archivo de candidatos proporcionado
     computrabajo_df = pd.read_excel('Computrabajo_Jobs.xlsx')

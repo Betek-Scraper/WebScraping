@@ -5,23 +5,21 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
-def generar_excel(urls):
-    # Iniciamos el navegador (Chrome en este caso)
-    driver = webdriver.Chrome()
-
-    # Lista para almacenar los datos de cada trabajo
+def generar_excel(urls, num_vacantes=10):
     jobs = []
 
-    for url in urls:  # Iterar sobre cada URL proporcionada
+    for url in urls:
+        # Iniciamos el navegador (Chrome en este caso)
+        driver = webdriver.Chrome()
         driver.get(url)
 
         # Espera explícita para que la página cargue completamente
         wait = WebDriverWait(driver, 10)
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
-        print(f"Página principal cargada para URL: {url}")
+        print("Página principal cargada.")
 
-        # Bucle de paginación hasta obtener al menos 100 trabajos
-        while len(jobs) < 10:  # Ajusta este límite según sea necesario
+        # Bucle de paginación hasta obtener el número deseado de trabajos
+        while len(jobs) < num_vacantes:
             # Obtener todas las ofertas de trabajo en la página actual
             job_offers = driver.find_elements(By.CLASS_NAME, 'box_offer')
             print(f"Encontradas {len(job_offers)} ofertas en esta página.")
@@ -38,7 +36,7 @@ def generar_excel(urls):
 
                     # Esperar que cargue la descripción completa en la página de detalle
                     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_detail')))
-                    time.sleep(2)
+                    time.sleep(2)  # Pausa breve para asegurar que toda la información esté cargada
 
                     # Capturar la descripción completa
                     try:
@@ -46,11 +44,18 @@ def generar_excel(urls):
                     except:
                         description = "Descripción no disponible"
 
+                    # Capturar la sección de "Requerimientos"
+                    try:
+                        requirements = driver.find_element(By.CSS_SELECTOR, 'ul.fs16.disc').text
+                        full_description = f"{description}\\n\\nRequerimientos:\\n{requirements}"
+                    except:
+                        full_description = description  # En caso de que no haya "Requerimientos"
+
                     # Guardar los datos en un diccionario
                     jobs.append({
                         'Company': company,
                         'Title': job_title,
-                        'Description': description,
+                        'Description': full_description,
                         'Apply Link': job_link
                     })
 
@@ -59,13 +64,13 @@ def generar_excel(urls):
                     # Volver a la página de listado
                     driver.back()
                     wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
-                    time.sleep(1)
+                    time.sleep(1)  # Pausa para que la página recargue los elementos
 
                 except Exception as e:
                     print(f"Error al procesar oferta: {e}")
                     continue
 
-            # Intentar ir a la siguiente página si aún no tenemos los trabajos necesarios
+            # Intentar ir a la siguiente página si aún no tenemos el número deseado de trabajos
             try:
                 next_button = driver.find_element(By.XPATH, '//span[@title="Siguiente"]')
                 driver.execute_script("arguments[0].click();", next_button)
@@ -75,6 +80,9 @@ def generar_excel(urls):
                 print("No se encontró el botón 'Siguiente' o se produjo un error.")
                 break
 
+        # Cerrar el navegador al finalizar
+        driver.quit()
+
     # Convertir la lista de trabajos a un DataFrame de pandas
     final_df = pd.DataFrame(jobs)
 
@@ -82,6 +90,3 @@ def generar_excel(urls):
     output_path = 'Computrabajo_Jobs.xlsx'
     final_df.to_excel(output_path, index=False)
     print(f"Datos guardados en {output_path} con éxito.")
-
-    # Cerrar el navegador al finalizar
-    driver.quit()

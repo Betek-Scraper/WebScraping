@@ -19,12 +19,10 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Variable de estado para verificar si se han generado los archivos
 files_generated = False
 
-
 # Página principal
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 # Ruta para subir y procesar el archivo de candidatos
 @app.route('/upload', methods=['POST'])
@@ -69,8 +67,17 @@ def upload_file():
     # Filtrar URLs vacías
     urls = [url for url in urls if url]
 
+    # Obtener el número de vacantes a buscar
+    try:
+        num_vacantes = int(request.form.get('vacantes', 10))  # Valor por defecto de 10
+        estimated_time = num_vacantes * 6  # 6 segundos por vacante
+        flash(f'Tiempo estimado de espera: {estimated_time} segundos.')
+    except ValueError:
+        flash('Por favor, introduce un número válido de vacantes.')
+        return redirect(url_for('index'))
+
     # Generar el Excel de trabajos usando linkedinjob
-    linkedinjob.generar_excel(urls)  # Esto guardará el archivo en disco
+    linkedinjob.generar_excel(urls, num_vacantes)  # Esto pasará el número de vacantes
 
     # Procesar el archivo de candidatos usando Empleo_Candidato
     Empleo_Candidato.procesar_excel(filepath)
@@ -80,7 +87,6 @@ def upload_file():
 
     flash('Archivo procesado exitosamente. Puedes descargar los archivos generados.')
     return redirect(url_for('index'))
-
 
 # Ruta para descargar el archivo de coincidencias
 @app.route('/download_coincidencias')
@@ -95,7 +101,6 @@ def download_coincidencias():
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='Mejores_Coincidencias_Ingles_Ajustado.xlsx')
 
-
 # Ruta para descargar el archivo de Computrabajo
 @app.route('/download_computrabajo')
 def download_computrabajo():
@@ -108,7 +113,6 @@ def download_computrabajo():
     computrabajo_df.to_excel(output, index=False)
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='Computrabajo_Jobs.xlsx')
-
 
 # Ruta para enviar correos a todos los candidatos
 @app.route('/send_emails', methods=['POST'])
@@ -126,7 +130,6 @@ def send_emails():
         flash(f'Error al enviar correos: {e}')
 
     return redirect(url_for('index'))
-
 
 if __name__ == '__main__':
     app.run()
