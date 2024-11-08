@@ -42,7 +42,8 @@ def enviar_emails():
     # Enviar correos a cada candidato
     for _, row in best_matches_df.iterrows():
         nombre_candidato = row['Candidate']
-        correo_candidato = row['Candidate Email']  # Cambiar a la dirección real del candidato en producción
+        # correo_candidato = row['Candidate Email']  # Cambiar a la dirección real del candidato en producción
+        correo_candidato = EMAIL_ADDRESS1
         titulo_vacante = row['Best Matched Job Title']
         descripcion_vacante = row['Job Description']
         link_postulacion = row['Apply Link']

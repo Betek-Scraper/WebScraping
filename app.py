@@ -61,8 +61,16 @@ def upload_file():
         flash(f'Error al leer el archivo: {e}')
         return redirect(url_for('index'))
 
+    # Obtener URLs de scraping del formulario
+    urls = [
+        request.form.get('url1', 'https://co.computrabajo.com/trabajo-de-desarrollador'),  # URL por defecto
+        request.form.get('url2')  # URL adicional si se proporciona
+    ]
+    # Filtrar URLs vacías
+    urls = [url for url in urls if url]
+
     # Generar el Excel de trabajos usando linkedinjob
-    linkedinjob.generar_excel()  # Esto guardará el archivo en disco
+    linkedinjob.generar_excel(urls)  # Esto guardará el archivo en disco
 
     # Procesar el archivo de candidatos usando Empleo_Candidato
     Empleo_Candidato.procesar_excel(filepath)
