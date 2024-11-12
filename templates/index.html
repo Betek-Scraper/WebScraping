@@ -24,23 +24,19 @@
         .alert {
             margin-top: 20px;
         }
-        #timeEstimate {
-            font-weight: bold;
-            color: #007bff;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="mb-4">Gestión de Candidatos</h1>
 
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="alert alert-danger">
+                <div class="alert alert-{{ messages[0][0] }}">
                     <ul>
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
+                        {% for message in messages %}
+                            <li>{{ message[1] }}</li>
+                        {% endfor %}
                     </ul>
                 </div>
             {% endif %}
@@ -68,19 +64,21 @@
                     <input type="file" name="file" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="url1">URL de la oferta de trabajo 1:</label>
-                    <input type="url" name="url1" class="form-control" placeholder="Ingrese la primera URL" value="https://co.computrabajo.com/trabajo-de-desarrollador">
+                    <label for="url1">URL del trabajo por defecto:</label>
+                    <input type="text" name="url1" class="form-control" value="https://co.computrabajo.com/trabajo-de-desarrollador" required>
                 </div>
                 <div class="form-group">
-                    <label for="url2">URL de la oferta de trabajo 2 de Computrabajo (opcional):</label>
-                    <input type="url" name="url2" class="form-control" placeholder="Ingrese la segunda URL (opcional)">
+                    <label for="url2">Agregar URL adicional de Computrabajo (opcional):</label>
+                    <input type="text" name="url2" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="vacancy_count">Número de vacantes a buscar:</label>
-                    <input type="number" name="vacancy_count" class="form-control" min="1" value="10" required oninput="updateEstimatedTime()">
+                    <label for="vacantes">Número de vacantes a buscar:</label>
+                    <input type="number" name="vacantes" class="form-control" min="1" value="10" required id="vacantes">
+                    <small>Nota: Aproximadamente 10 segundos por vacante.</small>
                 </div>
                 <div class="form-group">
-                    <span id="timeEstimate">Tiempo estimado: 1 minuto, 40 segundos</span>
+                    <label for="tiempoEstimado">Tiempo Estimado:</label>
+                    <input type="text" id="tiempoEstimado" class="form-control" readonly>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Subir</button>
             </form>
@@ -98,27 +96,31 @@
         </form>
     </div>
 
+    <script>
+        // Función para actualizar el tiempo estimado en base al número de vacantes
+        document.getElementById("vacantes").addEventListener("input", function() {
+            var vacantes = parseInt(this.value);
+            var segundosPorVacante = 10;
+            var totalSegundos = vacantes * segundosPorVacante;
+
+            // Calcular horas, minutos y segundos
+            var horas = Math.floor(totalSegundos / 3600);
+            var minutos = Math.floor((totalSegundos % 3600) / 60);
+            var segundos = totalSegundos % 60;
+
+            // Actualizar el campo con el tiempo estimado
+            var tiempoEstimado = "";
+            if (horas > 0) tiempoEstimado += horas + " hora" + (horas > 1 ? "s" : "") + " ";
+            if (minutos > 0) tiempoEstimado += minutos + " minuto" + (minutos > 1 ? "s" : "") + " ";
+            if (segundos > 0 || tiempoEstimado === "") tiempoEstimado += segundos + " segundo" + (segundos > 1 ? "s" : "");
+
+            // Mostrar el tiempo estimado
+            document.getElementById("tiempoEstimado").value = tiempoEstimado;
+        });
+    </script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        function updateEstimatedTime() {
-            const count = document.querySelector('input[name="vacancy_count"]').value;
-            const secondsPerJob = 10; // 10 seconds per job
-            const totalSeconds = count * secondsPerJob;
-
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-
-            const estimateText = `Tiempo estimado: ${hours} hora(s), ${minutes} minuto(s), ${seconds} segundo(s)`;
-            document.getElementById('timeEstimate').textContent = estimateText;
-        }
-
-        // Set initial estimate on load
-        window.onload = function() {
-            updateEstimatedTime();
-        };
-    </script>
 </body>
 </html>
