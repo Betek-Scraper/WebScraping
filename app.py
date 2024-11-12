@@ -52,11 +52,11 @@ def upload_file():
 
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
-            flash(f'Faltan los siguientes campos en el archivo: {", ".join(missing_columns)}')
+            flash(f'Faltan los siguientes campos en el archivo: {", ".join(missing_columns)}', 'danger')
             return redirect(url_for('index'))
 
     except Exception as e:
-        flash(f'Error al leer el archivo: {e}')
+        flash(f'Error al leer el archivo: {e}', 'danger')
         return redirect(url_for('index'))
 
     # Obtener URLs de scraping del formulario
@@ -71,9 +71,8 @@ def upload_file():
     try:
         num_vacantes = int(request.form.get('vacantes', 10))  # Valor por defecto de 10
         estimated_time = num_vacantes * 6  # 6 segundos por vacante
-        flash(f'Tiempo estimado de espera: {estimated_time} segundos.')
     except ValueError:
-        flash('Por favor, introduce un número válido de vacantes.')
+        flash('Por favor, introduce un número válido de vacantes.', 'danger')
         return redirect(url_for('index'))
 
     # Generar el Excel de trabajos usando linkedinjob
@@ -85,14 +84,14 @@ def upload_file():
     # Cambiar el estado a verdadero al completar la generación de archivos
     files_generated = True
 
-    flash('Archivo procesado exitosamente. Puedes descargar los archivos generados.')
+    flash('Archivo procesado exitosamente. Puedes descargar los archivos generados.', 'success')
     return redirect(url_for('index'))
 
 # Ruta para descargar el archivo de coincidencias
 @app.route('/download_coincidencias')
 def download_coincidencias():
     if not files_generated:  # Verificar si los archivos han sido generados
-        flash('Primero debes procesar los archivos antes de descargar.')
+        flash('Primero debes procesar los archivos antes de descargar.', 'warning')
         return redirect(url_for('index'))
 
     best_matches_df = pd.read_excel('Mejores_Coincidencias_Ingles_Ajustado.xlsx')
@@ -105,7 +104,7 @@ def download_coincidencias():
 @app.route('/download_computrabajo')
 def download_computrabajo():
     if not files_generated:  # Verificar si los archivos han sido generados
-        flash('Primero debes procesar los archivos antes de descargar.')
+        flash('Primero debes procesar los archivos antes de descargar.', 'warning')
         return redirect(url_for('index'))
 
     computrabajo_df = pd.read_excel('Computrabajo_Jobs.xlsx')
@@ -120,14 +119,14 @@ def send_emails():
     global files_generated  # Usar la variable global para verificar el estado
 
     if not files_generated:
-        flash('Debes procesar primero los archivos de candidatos antes de enviar correos.')
+        flash('Debes procesar primero los archivos de candidatos antes de enviar correos.', 'warning')
         return redirect(url_for('index'))
 
     try:
         enviar_correos.enviar_emails()  # Llamar a la función que envía correos
-        flash('Correos enviados exitosamente.')
+        flash('Correos enviados exitosamente.', 'success')
     except Exception as e:
-        flash(f'Error al enviar correos: {e}')
+        flash(f'Error al enviar correos: {e}', 'danger')
 
     return redirect(url_for('index'))
 

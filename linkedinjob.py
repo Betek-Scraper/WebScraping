@@ -25,6 +25,8 @@ def generar_excel(urls, num_vacantes=10):
             print(f"Encontradas {len(job_offers)} ofertas en esta página.")
 
             for offer in job_offers:
+                if len(jobs) >= num_vacantes:  # Si ya tenemos suficientes vacantes, salimos del ciclo
+                    break
                 try:
                     # Extraemos el nombre de la empresa y el título del trabajo
                     company = offer.find_element(By.CSS_SELECTOR, 'a.fc_base.t_ellipsis').text
@@ -71,14 +73,15 @@ def generar_excel(urls, num_vacantes=10):
                     continue
 
             # Intentar ir a la siguiente página si aún no tenemos el número deseado de trabajos
-            try:
-                next_button = driver.find_element(By.XPATH, '//span[@title="Siguiente"]')
-                driver.execute_script("arguments[0].click();", next_button)
-                wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
-                print("Página siguiente cargada.")
-            except Exception:
-                print("No se encontró el botón 'Siguiente' o se produjo un error.")
-                break
+            if len(jobs) < num_vacantes:
+                try:
+                    next_button = driver.find_element(By.XPATH, '//span[@title="Siguiente"]')
+                    driver.execute_script("arguments[0].click();", next_button)
+                    wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'box_offer')))
+                    print("Página siguiente cargada.")
+                except Exception:
+                    print("No se encontró el botón 'Siguiente' o se produjo un error.")
+                    break
 
         # Cerrar el navegador al finalizar
         driver.quit()
