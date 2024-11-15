@@ -5,7 +5,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import time
 
-from app import index
 
 
 def generar_excel(urls, num_vacantes=10):
